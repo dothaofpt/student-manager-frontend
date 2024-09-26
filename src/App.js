@@ -1,39 +1,38 @@
-// src/App.js
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import AddStudentForm from './components/AddStudentForm';
+import React from 'react';
+import { Layout, Menu } from 'antd';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import StudentList from './components/StudentList';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import AddStudent from './components/AddStudent';
+import './App.css';
+
+const { Header, Content, Footer } = Layout;
 
 const App = () => {
-  const [students, setStudents] = useState([]);
-
-  const fetchStudents = async () => {
-    const response = await axios.get('/api/students');
-    setStudents(response.data);
-  };
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const handleStudentAdded = (newStudent) => {
-    setStudents((prevStudents) => [...prevStudents, newStudent]);
-  };
-
-  const handleStudentDeleted = (id) => {
-    setStudents((prevStudents) => prevStudents.filter(student => student._id !== id));
-  };
-
   return (
-    <div className="container mt-5">
-      <h1>Student Manager</h1>
-      <AddStudentForm onStudentAdded={handleStudentAdded} />
-      <StudentList students={students} onStudentDeleted={handleStudentDeleted} />
-      <ToastContainer />
-    </div>
+    <Router>
+      <Layout className="layout">
+        <Header>
+          <div className="logo" />
+          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
+            <Menu.Item key="1">
+              <Link to="/">Student List</Link>
+            </Menu.Item>
+            <Menu.Item key="2">
+              <Link to="/add">Add Student</Link>
+            </Menu.Item>
+          </Menu>
+        </Header>
+        <Content style={{ padding: '0 50px', marginTop: '20px' }}>
+          <div className="site-layout-content">
+            <Routes>
+              <Route path="/" element={<StudentList />} />
+              <Route path="/add" element={<AddStudent />} />
+            </Routes>
+          </div>
+        </Content>
+        <Footer style={{ textAlign: 'center' }}>Student Manager ©2023</Footer>
+      </Layout>
+    </Router>
   );
 };
 
