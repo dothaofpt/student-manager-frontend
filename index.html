@@ -10,7 +10,7 @@
   <div class="container mt-5">
     <h1>Quản Lý Sinh Viên</h1>
 
-    <!-- Form thêm sinh viên -->
+    <!-- Form thêm/sửa sinh viên -->
     <form id="studentForm">
       <div class="mb-3">
         <label for="name" class="form-label">Họ và tên</label>
@@ -31,7 +31,8 @@
         <label for="major" class="form-label">Chuyên ngành</label>
         <input type="text" class="form-control" id="major" required>
       </div>
-      <button type="submit" class="btn btn-primary">Thêm Sinh Viên</button>
+      <input type="hidden" id="studentId"> <!-- Ẩn ID để biết đang sửa hay thêm -->
+      <button type="submit" class="btn btn-primary">Lưu Sinh Viên</button>
     </form>
 
     <hr>
@@ -43,20 +44,88 @@
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
+    // Tải danh sách sinh viên khi tải trang
+    async function loadStudents() {
+      try {
+        const response = await axios.get('http://localhost:3000/students');
+        const students = response.data;
+        const studentList = document.getElementById('studentList');
+        studentList.innerHTML = ''; // Xóa danh sách cũ trước khi thêm mới
+
+        students.forEach(student => {
+          const studentItem = document.createElement('li');
+          studentItem.classList.add('list-group-item');
+          studentItem.innerHTML = `
+            <strong>${student.name}</strong> - Tuổi: ${student.age}, Giới tính: ${student.gender}, Chuyên ngành: ${student.major}
+            <button class="btn btn-sm btn-warning float-end ms-2" onclick="editStudent('${student._id}')">Sửa</button>
+            <button class="btn btn-sm btn-danger float-end" onclick="deleteStudent('${student._id}')">Xóa</button>
+          `;
+          studentList.appendChild(studentItem);
+        });
+      } catch (error) {
+        alert('Lỗi khi tải danh sách sinh viên');
+      }
+    }
+
+    // Thêm hoặc sửa sinh viên
     document.getElementById('studentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const id = document.getElementById('studentId').value;
       const name = document.getElementById('name').value;
       const age = document.getElementById('age').value;
       const gender = document.getElementById('gender').value;
       const major = document.getElementById('major').value;
 
       try {
-        await axios.post('http://localhost:3000/students', { name, age, gender, major });
-        alert('Thêm sinh viên thành công');
+        if (id) {
+          // Nếu có ID => Cập nhật sinh viên
+          await axios.put(`http://localhost:3000/students/${id}`, { name, age, gender, major });
+          alert('Cập nhật sinh viên thành công');
+        } else {
+          // Nếu không có ID => Thêm sinh viên mới
+          await axios.post('http://localhost:3000/students', { name, age, gender, major });
+          alert('Thêm sinh viên thành công');
+        }
+        document.getElementById('studentForm').reset(); // Reset form sau khi thêm hoặc sửa
+        document.getElementById('studentId').value = ''; // Xóa giá trị ID
+        loadStudents(); // Tải lại danh sách sinh viên
       } catch (error) {
-        alert('Lỗi khi thêm sinh viên');
+        alert('Lỗi khi lưu sinh viên');
       }
     });
+
+    // Xóa sinh viên
+    async function deleteStudent(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
+        try {
+          await axios.delete(`http://localhost:3000/students/${id}`);
+          alert('Xóa sinh viên thành công');
+          loadStudents(); // Tải lại danh sách sau khi xóa
+        } catch (error) {
+          alert('Lỗi khi xóa sinh viên');
+        }
+      }
+    }
+
+    // Sửa sinh viên
+    async function editStudent(id) {
+      try {
+        const response = await axios.get(`http://localhost:3000/students/${id}`);
+        const student = response.data;
+
+        // Điền thông tin sinh viên vào form
+        document.getElementById('name').value = student.name;
+        document.getElementById('age').value = student.age;
+        document.getElementById('gender').value = student.gender;
+        document.getElementById('major').value = student.major;
+        document.getElementById('studentId').value = student._id; // Lưu ID để biết đang sửa
+      } catch (error) {
+        alert('Lỗi khi tải thông tin sinh viên');
+      }
+    }
+
+    // Gọi hàm tải danh sách sinh viên khi trang được tải
+    loadStudents();
   </script>
 </body>
 </html>
