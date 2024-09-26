@@ -1,25 +1,40 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import AddStudentForm from './components/AddStudentForm';
+import StudentList from './components/StudentList';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-function App() {
+const App = () => {
+  const [students, setStudents] = useState([]);
+
+  const fetchStudents = async () => {
+    const response = await axios.get('/api/students');
+    setStudents(response.data);
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const handleStudentAdded = (newStudent) => {
+    setStudents((prevStudents) => [...prevStudents, newStudent]);
+  };
+
+  const handleStudentDeleted = (id) => {
+    setStudents((prevStudents) => prevStudents.filter(student => student._id !== id));
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container mt-5">
+      <h1>Student Manager</h1>
+      <AddStudentForm onStudentAdded={handleStudentAdded} />
+      <StudentList students={students} onStudentDeleted={handleStudentDeleted} />
+      <ToastContainer />
     </div>
   );
-}
+};
 
 export default App;
