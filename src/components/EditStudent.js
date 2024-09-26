@@ -1,29 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import './Addstudent.css';
 
-const AddStudent = () => {
+const EditStudent = () => {
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    fetchStudent();
+  }, []);
+
+  const fetchStudent = async () => {
+    try {
+      const response = await axios.get(`/api/students/${id}`);
+      form.setFieldsValue(response.data);
+    } catch (error) {
+      message.error('Error fetching student data');
+    }
+  };
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      await axios.post('/api/students', values);
-      message.success('Student added successfully');
+      await axios.put(`/api/students/${id}`, values);
+      message.success('Student updated successfully');
       navigate('/');
     } catch (error) {
-      message.error('Error adding student');
+      message.error('Error updating student');
     }
     setLoading(false);
   };
 
   return (
     <div>
-      <h2>Add New Student</h2>
-      <Form onFinish={onFinish} layout="vertical">
+      <h2>Edit Student</h2>
+      <Form form={form} onFinish={onFinish} layout="vertical">
         <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter name' }]}>
           <Input placeholder="Enter student name" />
         </Form.Item>
@@ -38,7 +53,7 @@ const AddStudent = () => {
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
-            Add Student
+            Update Student
           </Button>
         </Form.Item>
       </Form>
@@ -46,4 +61,4 @@ const AddStudent = () => {
   );
 };
 
-export default AddStudent;
+export default EditStudent;
